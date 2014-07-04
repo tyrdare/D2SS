@@ -69,7 +69,7 @@ def get_db_connection(connect_string):
     if connect_string:
         try:
             connection = db_module.connect(config.db_connect_string)
-        except db_module.DatabaseError as e:
+        except db_module.DatabaseError as e: 
             err, = e.args
             print "Error attempting to get a %s connection: %s" % (db_module.__name__, err)
             sys.exit(3)
