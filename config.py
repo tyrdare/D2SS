@@ -1,14 +1,14 @@
 
 
 # for connect_string, use a string appropriate to your database flavor. db_type is the
-# database flavor: ORCL, PGSQL, MYSQL, MSSQL
 db_connect_string = "dbname=d2ss host=127.0.0.1 port=5432 user=d2ss password=d2ss"
+# database flavor: ORCL, PGSQL, MYSQL, MSSQL
 db_type = "PGSQL"
 
 # output_headers will put column headers in the first row of the file.
 output_headers = True
 
-# output_type can be CSV, XLS, ODS
+# output_type can be CSV, XLSX, ODS
 output_type = "XLSX"
 
 output_file = "/tmp/d2ss_test_pgsql.xlsx"

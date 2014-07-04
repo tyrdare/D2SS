@@ -110,8 +110,8 @@ def execute_query(query):
         else:
             print "Error executing SQL statement: %s" % err
         sys.exit(4)
-    except db_module.DatabaseDataError as dbde:
-        err, = dbde.args
+    except db_module.DataError as de:
+        err, = de.args
         if hasattr(err, "message"):
             print "Error executing SQL statement: %s" % err.message
         else:
