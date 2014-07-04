@@ -1,10 +1,10 @@
 __author__ = 'oradba'
 
-#import cx_Oracle
+
 import sys
 import os
 import argparse
-import json
+import config
 
 from datahandlers import DataWriter
 
@@ -27,6 +27,10 @@ output_flavors = {
 }
 
 
+class ConfigurationError(Exception):
+    pass
+
+
 def show_supported_dbs():
     global db_flavors
 
@@ -41,66 +45,79 @@ def show_supported_output_formats():
         sys.exit(0)
 
 
-def set_database_flavor(cfg_obj):
+def set_database_flavor(flavor):
     """
     Determines the database type and attempts to import the correct module for it.
     """
     global db_module, db_flavors
 
-    flavor = cfg_obj['db']["db_type"]
     #mesg = "Database type is %s"
     # if the requested database type is one we support, try to import the driver
-    if flavor.upper() in db_flavors.keys():
+    if flavor.upper() in db_flavors:
         db_module = __import__(db_flavors[flavor.upper()])
     else:
         print "Database type %s is not supported" % flavor
-        print "Supported databases are %s" % ",".join(db_flavors.keys())
-        sys.exit(1)
+        show_supported_dbs()
 
 
-def get_db_connection(cfg_obj):
+def get_db_connection(connect_string):
     """
     Attempts to open a db connection and return same.
     """
     global connection, db_module
-    conn_str = cfg_obj['db']["connect_string"]
-    try:
-        connection = db_module.connect(conn_str)
-    except Exception as e:
-        print "Error attempting to get a %s connection" % db_module.__name__
-        sys.exit(3)
 
-    return connection
+    if connect_string:
+        try:
+            connection = db_module.connect(config.db_connect_string)
+        except db_module.DatabaseError as e:
+            err, = e.args
+            print "Error attempting to get a %s connection: %s" % (db_module.__name__, err)
+            sys.exit(3)
 
+        return connection
+    raise ConfigurationError("No database connection configured")
 
 def process_args():
     """
     Returns an args object
     """
     arg_obj = argparse.ArgumentParser(description="A Program to output query data to a spreadsheet (XLS or CSV)")
-    arg_obj.add_argument(
-        "-f", action="store", dest="file", type=str, help="path to the JSON-formatted configuration file"
-    )
     arg_obj.add_argument("-ld", action="store_true", help="List program-supported databases")
     arg_obj.add_argument("-lo", action="store_true", help="List program-supported output formats")
     return arg_obj.parse_args()
 
 
-def load_config(fname):
-    # open the config file, if it exists and is a file
-    if not os.path.exists(fname) or not os.path.isfile(fname):
-        raise OSError("%s does not exist or is not a file" % fname)
+def execute_query(query):
 
-    with open(fname, "r") as f:
-        return json.load(f)
-
-
-def execute_query(cfg_obj):
-    set_database_flavor(cfg_obj)
     # print config['db']["connect_string"]
-    conn = get_db_connection(cfg_obj)
-    curs = conn.cursor()
-    curs.execute(" ".join(cfg_obj["query"]))
+    conn = get_db_connection(config.db_connect_string)
+    try:
+        curs = conn.cursor()
+    except db_module.DatabaseError as dbe:
+        err, = dbe.args
+        if hassattr(err, "message"):
+            print "Error obtaining database cursor: %s" % err.message
+        else:
+            print "Error obtaining database cursor: %s" % err
+        sys.exit(4)
+
+    try:
+        curs.execute(" ".join(config.query))
+    except db_module.DatabaseError as dbe:
+        err, = dbe.args
+        if hasattr(err, "message"):
+            print "Error executing SQL statement: %s" % err.message
+        else:
+            print "Error executing SQL statement: %s" % err
+        sys.exit(4)
+    except db_module.DatabaseDataError as dbde:
+        err, = dbde.args
+        if hasattr(err, "message"):
+            print "Error executing SQL statement: %s" % err.message
+        else:
+            print "Error executing SQL statement: %s" % err
+        sys.exit(5)
+
     return curs
 
 
@@ -113,16 +130,17 @@ def main():
     if arg_obj.lo:
         show_supported_output_formats()
 
-    config = load_config(arg_obj.file)
+    set_database_flavor(config.db_type)
 
-    curs = execute_query(config)
+    curs = execute_query(config.query)
 
-    dw = DataWriter(curs, config["db"]["db_type"], config["output"]["output_type"],  config["output"]["output_file"])
-    dw.write_header = True
+    dw = DataWriter(curs, config.db_type, config.output_type, config.output_file, config.output_headers)
     dw.write_data()
 
-    curs.connection.close()
+    conn = curs.connection
     curs.close()
+    conn.close()
+
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,5 @@
 __author__ = 'oradba'
 
-import cx_Oracle
 import xlsxwriter
 #import csv
 #import ezodf
@@ -19,7 +18,7 @@ class DataWriter(object):
     such as getting the query metadata (column names, types, etc.
     """
 
-    def __init__(self, curs, db_type, output_type, output_file):
+    def __init__(self, curs, db_type, output_type, output_file, write_header):
         """
         Takes a cursor to instantiate
         """
@@ -27,6 +26,7 @@ class DataWriter(object):
         self.db_type = db_type
         self.column = 0
         self.row = 0
+        self.write_header = write_header
         self.output_type = self.check_output_type(output_type)
         self.header = self.set_header()
         self.output_file = output_file
@@ -97,8 +97,11 @@ class DataWriter(object):
             #print "write_row(): in the XLS block"
             #print "data:", row
             for i in range(len(row)):
-                if type(row[i]) == datetime.datetime:
-                    self.output_dest.worksheets()[0].write_datetime(self.row,self.column + i, row[i], self.date_format)
+                print row[i], "is type", type(row[i])
+
+                if type(row[i]) == datetime.datetime or type(row[i]) == datetime.date:
+                    self.output_dest.worksheets()[0].write_datetime(self.row, self.column + i, row[i], self.date_format)
+
                 else:
                     self.output_dest.worksheets()[0].write(self.row, self.column+i, row[i] )
             self.row +=1
