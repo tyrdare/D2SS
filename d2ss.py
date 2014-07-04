@@ -32,6 +32,9 @@ class ConfigurationError(Exception):
 
 
 def show_supported_dbs():
+    """
+    Display the list of supported databases
+    """
     global db_flavors
 
     print "Supported databases are %s" % ",".join(db_flavors.keys())
@@ -39,6 +42,11 @@ def show_supported_dbs():
 
 
 def show_supported_output_formats():
+    """
+    Display the list of supported output formats
+    """
+    global output_flavors
+
     print "Supported output formats:"
     for key in output_flavors.keys():
         print "%s : %s" % (key, output_flavors[key])
@@ -69,7 +77,7 @@ def get_db_connection(connect_string):
     if connect_string:
         try:
             connection = db_module.connect(config.db_connect_string)
-        except db_module.DatabaseError as e: 
+        except db_module.DatabaseError as e:
             err, = e.args
             print "Error attempting to get a %s connection: %s" % (db_module.__name__, err)
             sys.exit(3)
@@ -88,14 +96,17 @@ def process_args():
 
 
 def execute_query(query):
+    """
+    Execute the submitted query and return the cursor
+    """
 
-    # print config['db']["connect_string"]
+    # we won't need to keep the database connection, since the cursor will hold a reference to it
     conn = get_db_connection(config.db_connect_string)
     try:
         curs = conn.cursor()
     except db_module.DatabaseError as dbe:
         err, = dbe.args
-        if hassattr(err, "message"):
+        if hasattr(err, "message"):
             print "Error obtaining database cursor: %s" % err.message
         else:
             print "Error obtaining database cursor: %s" % err
@@ -122,9 +133,12 @@ def execute_query(query):
 
 
 def main():
+    """
+    Make main routine importable.  Important in some situations
+    """
     # get my command line arguments
     arg_obj = process_args()
-    #print arg_obj
+
     if arg_obj.ld:
         show_supported_dbs()
     if arg_obj.lo:
@@ -134,9 +148,10 @@ def main():
 
     curs = execute_query(config.query)
 
+    # DataWriter is responsible for creating the spreadsheet
     dw = DataWriter(curs, config.db_type, config.output_type, config.output_file, config.output_headers)
     dw.write_data()
-
+    dw.close()
     conn = curs.connection
     curs.close()
     conn.close()

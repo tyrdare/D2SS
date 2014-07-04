@@ -2,15 +2,11 @@ __author__ = 'oradba'
 
 import xlsxwriter
 #import csv
-#import ezodf
+import ezodf
 import datetime
 
 
-class ColumnDescription(object):
-    def __init__(self):
-        pass
 
-# data handlers differ by database and by the type definition of the columns returned.
 
 class DataWriter(object):
     """
@@ -37,8 +33,8 @@ class DataWriter(object):
         # to determine the type of the output column (string, number, date, etc.
 
     def check_output_type(self,output_type):
-        #output_types = ["CSV", "XLSX", "ODS"]
-        output_types = ["XLSX"]
+        output_types = ["CSV", "XLSX", "ODS"]
+        #output_types = ["XLSX"]
         if output_type in output_types:
             return output_type
         else:
@@ -52,7 +48,7 @@ class DataWriter(object):
 
         if self.output_type == "XLSX":
             # Can't save a Workbook - can only close()
-            spreadsheet =  xlsxwriter.Workbook(self.output_file)
+            spreadsheet = xlsxwriter.Workbook(self.output_file)
             spreadsheet.add_worksheet("Data")
             # need to create this and save it for writing dates later.
             self.date_format = spreadsheet.add_format({'num_format': 'yyyy/mm/dd hh:mm:ss'})
@@ -61,10 +57,10 @@ class DataWriter(object):
         #elif self.output_type == "CSV":
         #    spreadsheet = csv.writer(self.output_file,delimiter=":::")
 
-        #elif self.output_type == "ODS":
-        #    spreadsheet = ezodf.newdoc(doctype="ods", filename=self.output_file)
-        #    spreadsheet.sheets[0] = ezodf.Sheet("Data")
-        #    spreadsheet.save()
+        elif self.output_type == "ODS":
+            spreadsheet = ezodf.newdoc(doctype="ods", filename=self.output_file)
+            spreadsheet.sheets.append(ezodf.Sheet("Data"))
+            spreadsheet.save()
 
         return spreadsheet
 
@@ -81,16 +77,16 @@ class DataWriter(object):
         for row in self.curs:
             self.write_row(row)
 
-    def write_header_row(self):
-        # need to know what format I'm writing out to: CSV, ODF or  XLS
+        if self.output_type == 'ODS':
+            self.output_dest.save
 
-        if self.output_type == "XLSX":
-            #print "write_header(): in the XLS block"
-            self.write_row(self.header)
-        #elif self.output_type == "CSV":
-        #    pass
-        #elif self.output_type == "ODS":
-        #    pass
+    def write_header_row(self):
+        """
+        Writes out the header row. All Columns are assumed to be strings
+        """
+
+        self.write_row(self.header)
+
 
     def write_row(self, row):
         if self.output_type == "XLSX":
@@ -98,15 +94,32 @@ class DataWriter(object):
             #print "data:", row
             for i in range(len(row)):
                 print row[i], "is type", type(row[i])
-
+                # first condition catches Oracle dates, second catches PostgreSQL dates for XLSX output
+                # XLSX will treat outputted python datetimes as numbers otherwise
                 if type(row[i]) == datetime.datetime or type(row[i]) == datetime.date:
                     self.output_dest.worksheets()[0].write_datetime(self.row, self.column + i, row[i], self.date_format)
 
                 else:
                     self.output_dest.worksheets()[0].write(self.row, self.column+i, row[i] )
-            self.row +=1
-        #elif self.output_type == "CSV":
-        #    pass
-        #elif self.output_type == "ODS":
-        #    pass
+            self.row += 1
 
+        elif self.output_type == "ODS":
+            #print "write_row(): in the ODS block"
+            #print "data:", row
+            for i in range(len(row)):
+                self.output_dest.sheets[0][self.row, self.column + i].set_value(row[i])
+            self.row += 1
+
+        elif self.output_type == "CSV":
+            pass
+
+
+    def close(self):
+        if self.output_type == 'XLSX':
+            # xlsxwriter doesn't close its file, it just exits.
+            self.output_dest.close()
+
+        elif self.output_type == 'ODS':
+            self.output_dest.save()
+        elif self.output_type == 'CSV':
+            self.output_dest.close()
