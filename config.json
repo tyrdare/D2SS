@@ -1,0 +1,21 @@
+{
+    "db": {
+        "_comment": "for connect_string, use a string appropriate to your database flavor. db_type is the database flavor: ORCL, PGSQL, MYSQL, MSSQL",
+        "connect_string":"database_specific_connect_string",
+        "db_type": "ORCL"
+    },
+    "output": {
+        "_comment": "output_headers will put column headers on the column. output_type can be CSV, XLS, ODS",
+        "output_headers": true,
+        "output_type": "XLSX",
+        "output_file": "/path/to/your/output.file"
+    },
+    "_comment": "query is an array of clauses that make up the sql statement.  These will be concatenated in the program but allow you to make the statement a little more readable",
+    "query" :
+        [
+            "select *",
+            "from some_table",
+            "where condition",
+            "order by column set"
+        ]
+}
