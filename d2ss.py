@@ -2,7 +2,6 @@ __author__ = 'oradba'
 
 
 import sys
-import os
 import argparse
 import config
 
@@ -37,8 +36,9 @@ def show_supported_dbs():
     """
     global db_flavors
 
-    print "Supported databases are %s" % ",".join(db_flavors.keys())
-    sys.exit(0)
+    print "Supported databases are:"
+    for key in db_flavors.keys():
+        print "\t%s : %s" % (key, db_flavors[key])
 
 
 def show_supported_output_formats():
@@ -49,13 +49,12 @@ def show_supported_output_formats():
 
     print "Supported output formats:"
     for key in output_flavors.keys():
-        print "%s : %s" % (key, output_flavors[key])
-        sys.exit(0)
+        print "\t%s : %s" % (key, output_flavors[key])
 
 
 def set_database_flavor(flavor):
     """
-    Determines the database type and attempts to import the correct module for it.
+    Determines the database type and attempts to dynamically import the correct module for it.
     """
     global db_module, db_flavors
 
@@ -89,7 +88,7 @@ def process_args():
     """
     Returns an args object
     """
-    arg_obj = argparse.ArgumentParser(description="A Program to output query data to a spreadsheet (XLS or CSV)")
+    arg_obj = argparse.ArgumentParser(description="A Program to output query data to a spreadsheet (XLS, ODS or CSV)")
     arg_obj.add_argument("-ld", action="store_true", help="List program-supported databases")
     arg_obj.add_argument("-lo", action="store_true", help="List program-supported output formats")
     return arg_obj.parse_args()
@@ -136,13 +135,19 @@ def main():
     """
     Make main routine importable.  Important in some situations
     """
+    exit_flag = False
     # get my command line arguments
     arg_obj = process_args()
 
     if arg_obj.ld:
         show_supported_dbs()
+        exit_flag = True
     if arg_obj.lo:
         show_supported_output_formats()
+        exit_flag = True
+
+    if exit_flag:
+        sys.exit(0)
 
     set_database_flavor(config.db_type)
 

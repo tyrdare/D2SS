@@ -10,12 +10,16 @@ In order to use D2SS you have to have the following dependencies installed:
 
     PostgreSQL client library
 
+    mysqldb or mariadb client library
+
 
 
 :Python dependencies:
     psycopg2
 
     cx_Oracle
+
+    mysqldb-python
 
     sqlite3
 
