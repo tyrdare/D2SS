@@ -1,11 +1,10 @@
 __author__ = 'oradba'
 
+import os
 import xlsxwriter
-#import csv
+import csv
 import ezodf
 import datetime
-
-
 
 
 class DataWriter(object):
@@ -23,16 +22,18 @@ class DataWriter(object):
         self.column = 0
         self.row = 0
         self.write_header = write_header
+        self.date_format = None
         self.output_type = self.check_output_type(output_type)
         self.header = self.set_header()
-        self.output_file = output_file
+        if not os.path.exists(os.path.split(output_file)[0]):
+            raise OSError("Path %s does not exist" % self.os.path.split(output_file)[0])
+        else:
+            self.output_file = output_file
         self.output_dest = self.set_output_dest()
 
-        # need to find out what sort of database I'm getting data from.
-        # use the column type info from the cursor's description attributes
-        # to determine the type of the output column (string, number, date, etc.
 
-    def check_output_type(self,output_type):
+    @staticmethod
+    def check_output_type(output_type):
         output_types = ["CSV", "XLSX", "ODS"]
         #output_types = ["XLSX"]
         if output_type in output_types:
@@ -53,9 +54,12 @@ class DataWriter(object):
             # need to create this and save it for writing dates later.
             self.date_format = spreadsheet.add_format({'num_format': 'yyyy/mm/dd hh:mm:ss'})
 
+        elif self.output_type == "CSV":
 
-        #elif self.output_type == "CSV":
-        #    spreadsheet = csv.writer(self.output_file,delimiter=":::")
+            f = open(self.output_file, "w")
+            spreadsheet = csv.writer(
+                f, dialect="excel", delimiter="~", quoting=csv.QUOTE_NONNUMERIC, escapechar='^', doublequote=False
+            )
 
         elif self.output_type == "ODS":
             spreadsheet = ezodf.newdoc(doctype="ods", filename=self.output_file)
@@ -78,7 +82,7 @@ class DataWriter(object):
             self.write_row(row)
 
         if self.output_type == 'ODS':
-            self.output_dest.save
+            self.output_dest.save()
 
     def write_header_row(self):
         """
@@ -86,7 +90,6 @@ class DataWriter(object):
         """
 
         self.write_row(self.header)
-
 
     def write_row(self, row):
         if self.output_type == "XLSX":
@@ -111,8 +114,7 @@ class DataWriter(object):
             self.row += 1
 
         elif self.output_type == "CSV":
-            pass
-
+            self.output_dest.writerow(row)
 
     def close(self):
         if self.output_type == 'XLSX':
@@ -122,4 +124,4 @@ class DataWriter(object):
         elif self.output_type == 'ODS':
             self.output_dest.save()
         elif self.output_type == 'CSV':
-            self.output_dest.close()
+            pass
