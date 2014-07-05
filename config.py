@@ -9,7 +9,7 @@ db_type = "PGSQL"
 output_headers = True
 
 # output_type can be CSV, XLSX, ODS
-output_type = "CSV"
+output_type = "XLSX"
 
 output_file = "/tmp/d2ss_test_pgsql.csv"
 
