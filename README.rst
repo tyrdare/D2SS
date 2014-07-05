@@ -47,6 +47,8 @@ Output formats:
 
     ODS
 
+    CSV
+
 
 Usage
 """""
