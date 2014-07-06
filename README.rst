@@ -1,5 +1,7 @@
 D2SS
-======
+====
+
+Database To SpreadSheet
 
 A utility to write the data from an arbitrary query to an spreadsheet.
 
@@ -29,7 +31,7 @@ In order to use D2SS you have to have the following dependencies installed:
 
     csv
 
-These python dependiencies are loaded when needed based on the db type and output type requested.  If you're only
+These python dependencies are loaded when needed based on the db type and output type requested.  If you're only
 going to use Oracle databases and Excel spreadsheets, you only need to install cx_Oracle and xlsxwriter on your
 system.
 
