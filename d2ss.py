@@ -5,12 +5,12 @@ import sys
 import argparse
 import config
 
-from datahandlers import DataWriter
+import datahandlers
 
 
 connection = None
 db_module = None
-db_type = None
+
 # Types of databases this program will support
 db_flavors = {
     "ORCL": "cx_Oracle",
@@ -97,6 +97,7 @@ def process_args():
 def execute_query(query):
     """
     Execute the submitted query and return the cursor
+    query param is a list
     """
 
     # we won't need to keep the database connection, since the cursor will hold a reference to it
@@ -112,7 +113,7 @@ def execute_query(query):
         sys.exit(4)
 
     try:
-        curs.execute(" ".join(config.query))
+        curs.execute(" ".join(query))
     except db_module.DatabaseError as dbe:
         err, = dbe.args
         if hasattr(err, "message"):
@@ -129,6 +130,22 @@ def execute_query(query):
         sys.exit(5)
 
     return curs
+
+
+def get_data_writer(curs, db_type, output_type, output_file, output_headers):
+
+    if output_type == "XLSX":
+        #import xlswriter
+        writer = datahandlers.XlsxDataWriter(curs, db_type, output_type, output_file, output_headers)
+    elif output_type == "CSV":
+        #import csv
+        writer = datahandlers.CsvDataWriter(curs, db_type, output_type, output_file, output_headers)
+    elif output_type == "ODS":
+        #import ezodf
+        writer = datahandlers.OdsDataWriter(curs, db_type, output_type, output_file, output_headers)
+    else:
+        raise TypeError("Unsupported output type: %s" % output_type)
+    return writer
 
 
 def main():
@@ -153,8 +170,9 @@ def main():
 
     curs = execute_query(config.query)
 
+    # gimme an xlsx DataWriter
     # DataWriter is responsible for creating the spreadsheet
-    dw = DataWriter(curs, config.db_type, config.output_type, config.output_file, config.output_headers)
+    dw = get_data_writer(curs, config.db_type, config.output_type, config.output_file, config.output_headers)
     dw.write_data()
     dw.close()
     conn = curs.connection

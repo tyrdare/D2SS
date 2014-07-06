@@ -11,7 +11,7 @@ output_headers = True
 # output_type can be CSV, XLSX, ODS
 output_type = "XLSX"
 
-output_file = "/tmp/d2ss_test_pgsql.csv"
+output_file = "/tmp/d2ss_test_pgsql.ods"
 
 
 # query is an array of clauses that make up the sql statement.  These will be concatenated in the program but
