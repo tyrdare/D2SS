@@ -17,8 +17,6 @@ class OdsDataWriter(object):
         """
         Set some necessary variables
         """
-        #self.io_mod = None
-        #self.import_mod()
         self.curs = curs
         self.db_type = db_type
         self.column = 0
@@ -92,8 +90,7 @@ class XlsxDataWriter(object):
         """
         Set some necessary variables
         """
-        import xlsxwriter
-        self.curs = curs
+         self.curs = curs
         self.db_type = db_type
         self.column = 0
         self.row = 0
@@ -174,9 +171,7 @@ class CsvDataWriter(object):
         """
         Set some necessary variables
         """
-        import csv
-        #self.io_mod = None
-        #self.import_mod()
+
         self.curs = curs
         self.db_type = db_type
         self.column = 0
