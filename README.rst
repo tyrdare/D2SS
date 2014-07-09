@@ -64,7 +64,7 @@ Add Database Support
 Output Format Support
 
     JsonDataWriter (need to determine what to do with repeated column names (in-conversion aliasing?)
-    
+
 Usage
 """""
 ::

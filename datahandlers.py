@@ -51,11 +51,9 @@ class OdsDataWriter(object):
         Instantiates the spreadsheet
         """
         spreadsheet = None
-        #print "In OdsWriter"
         spreadsheet = self.io_mod.newdoc(doctype="ods", filename=output_file)
         # add a sheet to the empty sheets list
         spreadsheet.sheets.append(self.io_mod.Sheet("Data"))
-        print spreadsheet.sheets
         spreadsheet.save()
         return spreadsheet
 
@@ -71,8 +69,12 @@ class OdsDataWriter(object):
 
     def write_row(self, row):
         #print "number of sheets is ", len(self.output_dest.sheets)
-        for i in range(len(row)):
-            self.output_dest.sheets[0][self.row, self.column + i].set_value(row[i])
+        #for i in range(len(row)):
+        #    self.output_dest.sheets[0][self.row, self.column + i].set_value(row[i])
+        #self.row += 1
+
+        for i,elem in enumerate(row):
+            self.output_dest.sheets[0][self.row, self.column + i].set_value(elem)
         self.row += 1
 
     # Overrides superclass' method
@@ -90,7 +92,7 @@ class XlsxDataWriter(object):
         """
         Set some necessary variables
         """
-         self.curs = curs
+        self.curs = curs
         self.db_type = db_type
         self.column = 0
         self.row = 0
@@ -145,14 +147,14 @@ class XlsxDataWriter(object):
 
     def write_row(self, row):
         #print "number of sheets is ", len(self.output_dest.sheets)
-        for i in range(len(row)):
+        for i, elem in enumerate(row):
             # first condition formats Oracle dates and PostgreSQL timestamps,
             # second catches PostgreSQL dates for XLSX output
             # XLSX will treat outputted python datetimes as numbers otherwise
-            if type(row[i]) == datetime.datetime or type(row[i]) == datetime.date:
-                self.output_dest.worksheets()[0].write_datetime(self.row, self.column + i, row[i], self.date_format)
+            if type(elem) == datetime.datetime or type(elem) == datetime.date:
+                self.output_dest.worksheets()[0].write_datetime(self.row, self.column + i, elem, self.date_format)
             else:
-                self.output_dest.worksheets()[0].write(self.row, self.column+i, row[i])
+                self.output_dest.worksheets()[0].write(self.row, self.column+i, elem)
         self.row += 1
 
     # Overrides superclass' method
