@@ -63,9 +63,8 @@ class OdsDataWriter(object):
         """
         if self.write_header:
             self.write_header_row()
+        [self.write_row(row) for row in self.curs]
 
-        for row in self.curs:
-            self.write_row(row)
 
     def write_row(self, row):
         #print "number of sheets is ", len(self.output_dest.sheets)
@@ -142,8 +141,10 @@ class XlsxDataWriter(object):
         if self.write_header:
             self.write_header_row()
 
-        for row in self.curs:
-            self.write_row(row)
+        [self.write_row(row) for row in self.curs]
+
+        #for row in self.curs:
+        #    self.write_row(row)
 
     def write_row(self, row):
         #print "number of sheets is ", len(self.output_dest.sheets)
@@ -219,8 +220,9 @@ class CsvDataWriter(object):
         if self.write_header:
             self.write_header_row()
 
-        for row in self.curs:
-            self.write_row(row)
+        #for row in self.curs:
+        #    self.write_row(row)
+        [self.write_row(row) for row in self.curs]
 
     def write_row(self, row):
         #print "number of sheets is ", len(self.output_dest.sheets)

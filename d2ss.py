@@ -15,8 +15,8 @@ db_module = None
 db_flavors = {
     "ORCL": "cx_Oracle",
     "PGSQL": "psycopg2",
-    "MYSQL": "mysqldb",
-    "MSSQL": "pyodbc"
+#    "MYSQL": "mysqldb",
+#    "MSSQL": "pyodbc"
 }
 
 output_flavors = {
