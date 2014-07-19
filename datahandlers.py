@@ -129,12 +129,9 @@ class XlsxDataWriter(DataWriter):
         Set some necessary variables
         """
         super(XlsxDataWriter,self).__init__(curs, db_type, output_type, output_file, write_header)
+        # need to create this and save it for writing dates later.
+        self.date_format = self.output_dest.add_format({'num_format': 'yyyy/mm/dd hh:mm:ss'})
 
-        if self.output_type == 'XLS':
-            # need to create this and save it for writing dates later.
-            self.date_format = self.output.dest.add_format({'num_format': 'yyyy/mm/dd hh:mm:ss'})
-        #print self.__dict__
-        #sys.exit(0)
 
     def set_output_dest(self, output_type, output_file):
         """
