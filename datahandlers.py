@@ -5,14 +5,15 @@ import sys
 import datetime
 import importlib
 import csv
+from abc import ABCMeta, abstractmethod
 
 
+class DataWriter(object):
 
-class OdsDataWriter(object):
-    """
-    Reads data from a database cursor and writes it to a Open Document Spreadsheet
-    """
-    io_mod = __import__('ezodf')
+    __meta__ = ABCMeta
+    output_type = None
+
+
     def __init__(self, curs, db_type, output_type, output_file, write_header):
         """
         Set some necessary variables
@@ -25,26 +26,60 @@ class OdsDataWriter(object):
         self.date_format = None
         self.output_type = self.check_output_type(output_type)
         self.header = self.set_header(curs)
-
         self.check_output_path(output_file)
 
+        self.output_file = self.check_output_path(output_file)
         self.output_dest = self.set_output_dest(self.output_type, self.output_file)
+
 
     def check_output_path(self, output_file):
         if not os.path.exists(os.path.split(output_file)[0]):
             raise OSError("Path %s does not exist" % os.path.split(output_file)[0])
-        self.output_file = output_file
+        return output_file
 
     def check_output_type(self, output_type):
-        if output_type != 'ODS':
-            raise TypeError("incorrect writer (ODS) for type %s" % output_type)
+        if output_type != self.output_type:
+            raise TypeError("incorrect writer (%s) for type %s" % (self.output_type,output_type))
         return output_type
 
-    def set_header(self, curs):
+    @staticmethod
+    def set_header(curs):
         """
         Creates a column names list from the cursor.description attribute supported by DBAPI 2.0
         """
         return [x[0] for x in curs.description]
+
+    @abstractmethod
+    def set_output_dest(self):
+        """
+            return a an output destination resource
+        """
+        pass
+
+    @abstractmethod
+    def write_data(self):
+        pass
+
+    @abstractmethod
+    def write_row(self):
+        pass
+
+    @abstractmethod
+    def write_header_row(self):
+        pass
+
+    @abstractmethod
+    def close(self):
+        pass
+
+#===============================
+class OdsDataWriter(DataWriter):
+    """
+    Reads data from a database cursor and writes it to a Open Document Spreadsheet
+    """
+    output_type = 'ODS'
+    io_mod = __import__('ezodf')
+
 
     def set_output_dest(self, output_type, output_file):
         """
@@ -83,47 +118,23 @@ class OdsDataWriter(object):
     def close(self):
         self.output_dest.save()
 
+#================================
+class XlsxDataWriter(DataWriter):
 
-class XlsxDataWriter(object):
+    output_type= "XLSX"
     io_mod = __import__('xlsxwriter')
 
     def __init__(self, curs, db_type, output_type, output_file, write_header):
         """
         Set some necessary variables
         """
-        self.curs = curs
-        self.db_type = db_type
-        self.column = 0
-        self.row = 0
-        self.write_header = write_header
-        self.date_format = None
-        self.output_type = self.check_output_type(output_type)
-        self.header = self.set_header(curs)
+        super(XlsxDataWriter,self).__init__(curs, db_type, output_type, output_file, write_header)
 
-        self.check_output_path(output_file)
-
-        self.output_dest = self.set_output_dest(self.output_type, self.output_file)
         if self.output_type == 'XLS':
             # need to create this and save it for writing dates later.
             self.date_format = self.output.dest.add_format({'num_format': 'yyyy/mm/dd hh:mm:ss'})
         #print self.__dict__
         #sys.exit(0)
-
-    def check_output_path(self, output_file):
-        if not os.path.exists(os.path.split(output_file)[0]):
-            raise OSError("Path %s does not exist" % os.path.split(output_file)[0])
-        self.output_file = output_file
-
-    def check_output_type(self, output_type):
-        if output_type != 'XLSX':
-            raise TypeError("incorrect writer (ODS) for type %s" % output_type)
-        return output_type
-
-    def set_header(self, curs):
-        """
-        Creates a column names list from the cursor.description attribute supported by DBAPI 2.0
-        """
-        return [x[0] for x in curs.description]
 
     def set_output_dest(self, output_type, output_file):
         """
@@ -165,44 +176,14 @@ class XlsxDataWriter(object):
     def close(self):
         self.output_dest.close()
 
-class CsvDataWriter(object):
+#===============================
+class CsvDataWriter(DataWriter):
     """
-    Reads data from a database cursor and writes it to a Open Document Spreadsheet
+    Reads data from a database cursor and writes it to a comma separated values file
     """
+    output_type = 'CSV'
     io_mod = __import__('csv')
-    def __init__(self, curs, db_type, output_type, output_file, write_header):
-        """
-        Set some necessary variables
-        """
 
-        self.curs = curs
-        self.db_type = db_type
-        self.column = 0
-        self.row = 0
-        self.write_header = write_header
-        self.date_format = None
-        self.output_type = self.check_output_type(output_type)
-        self.header = self.set_header(curs)
-
-        self.check_output_path(output_file)
-
-        self.output_dest = self.set_output_dest(self.output_type, self.output_file)
-
-    def check_output_path(self, output_file):
-        if not os.path.exists(os.path.split(output_file)[0]):
-            raise OSError("Path %s does not exist" % os.path.split(output_file)[0])
-        self.output_file = output_file
-
-    def check_output_type(self, output_type):
-        if output_type != 'CSV':
-            raise TypeError("incorrect writer (CSV) for type %s" % output_type)
-        return output_type
-
-    def set_header(self, curs):
-        """
-        Creates a column names list from the cursor.description attribute supported by DBAPI 2.0
-        """
-        return [x[0] for x in curs.description]
 
     def set_output_dest(self, output_type, output_file):
         """
@@ -234,3 +215,7 @@ class CsvDataWriter(object):
 
     def close(self):
         pass
+
+
+if __name__ == "__main__":
+    pass
