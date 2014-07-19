@@ -85,4 +85,4 @@ The configuration file is a simple python file, config.py, containing a a set of
 imported into the d2ss program. Please have a look
 
 Note that "query" is an array of strings.  This is so the user can format the sql for readability.  The program will
-glue it all back together into a string using spaces to execute it.
+glue it all back together into a string using spaces before executing it.
